@@ -22,14 +22,16 @@ def basic():
     plt.show()
 
 
-def step(theta0, theta, learning_rate, features, expenses):
+def step(theta0, theta_, learning_rate, feature, expenses):
+    features = feature.transpose()
+    theta = theta_.transpose()
     cons = 0.0
     cost_here = 0.0
     slope = np.zeros((len(theta), 1))
-    for j in range(0, len(features)):
+    for j in range(0, len(expenses)):
         temp = (expenses[j] - (
                 cons + np.dot(features[j], theta)))
-        print(temp)
+        print()
         cons += temp
         # slope += (temp * theta)
         cost_here += temp ** 2
@@ -50,8 +52,10 @@ def gradient_descent(features, expenses, theta, theta0, iterations, learning_rat
 
 def compute_error(features, expenses, theta, theta0):
     error = 0.0
+    feature = features.transpose()
     for i in range(len(expenses)):
-        predict = theta0 + np.dot(features[i], theta)
+        predict = theta0 + np.dot(feature[i], theta.transpose())
+        # print(predict)
         error += (expenses[i] - predict) ** 2
     return error / float(len(expenses))
 
@@ -78,10 +82,11 @@ def run():
     theta0 = 0.0
     theta = np.array([0.0, 0.0, 0.0, 0.0, 0.0, 0.0])
     # print(len(features.transpose()[0]))
-    # print("Initial error is {0}".format(compute_error(features.transpose(), expenses, theta.transpose(), theta0)))
+#    print(np.dot(features.transpose()[0], theta.transpose()))
+    print("Initial error is {0}".format(compute_error(features, expenses, theta, theta0)))
     #    print(len(features[0]))
-    # cost, theta0, theta = gradient_descent(features.transpose(), expenses, theta.transpose(), theta0, iterations, learning_rate)
-    # print("Final error is {0}".format(compute_error(features.transpose(), expenses, theta.transpose(), theta0)))
+    cost, theta0, theta = gradient_descent(features, expenses, theta, theta0, iterations, learning_rate)
+    print("Final error is {0}".format(compute_error(features, expenses, theta, theta0)))
     # plt.plot(range(iterations), cost, 'b.')
     # plt.show()
 

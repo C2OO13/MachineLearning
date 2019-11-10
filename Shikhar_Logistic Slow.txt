@@ -1,0 +1,127 @@
+import pandas as pd
+import numpy as ny
+import sklearn
+from sklearn import linear_model
+from sklearn.utils import shuffle
+from sklearn.preprocessing import normalize,scale
+import matplotlib.pyplot as plt
+from matplotlib import style
+
+iterations=1000
+alpha=0.7
+
+def sig(z):
+    return 1/(1+ny.exp(z))
+
+def hyp(theta, x, i):
+    z=ny.dot(x, theta)
+    return sig(z)
+
+def cost(hyp_x, y):
+    return -1*(y*ny.log(hyp_x)+(1-y)*ny.log(1-hyp_x))
+
+def deri(y, hyp_x):
+    return (hyp_x-y)
+
+data=pd.read_csv("MagicTelescope.dat", sep=",")
+
+print(data)
+
+new_data=data.drop([17990, 17956, 17889, 17893, 359, 363, 8133, 11680, 15020, 8215])
+new_data['fSize:']=new_data['fSize:'].astype(float)
+new_data['fAsym:']=new_data['fAsym:'].astype(float)
+new_data['fM3Lon0:']=new_data['fM3Lon0:'].astype(float)
+new_data['fConc1:']=new_data['fConc1:'].astype(float)
+new_data=(new_data.dropna(how='all').interpolate(method='pad').dropna(how='any'))
+new_data.drop('ID', axis=1, inplace=True)
+bias=ny.ones((new_data.shape[0], 1))
+new_data.insert(0, "X0", bias, True)
+print(new_data.dtypes)
+print(new_data)
+
+answer="class"
+
+x=ny.array(new_data.drop([answer], 1))
+y=ny.zeros((x.shape[0], 1))
+p=ny.array(new_data[answer])
+
+for i in range(0, y.shape[0]):
+    if(p[i]=='h'):
+        y[i]=1
+    else:
+        y[i]=0
+
+x_train, x_test, y_train, y_test = sklearn.model_selection.train_test_split(x, y, test_size=0.33, random_state=45)
+
+x_train=scale(x_train)
+x_train=normalize(x_train)
+x_test=scale(x_test)
+x_test=normalize(x_test)
+
+
+m=x_train.shape[0]
+feat=x_train.shape[1]
+theta_t=ny.zeros((feat, 1))
+
+style.use('ggplot')
+q=1
+
+for a in range(iterations):
+    cost_a=ny.zeros((m, 1))
+    cost_b=ny.zeros((m, feat))
+    dcost=ny.zeros((feat, 1))
+
+    for i in range(0, m):
+        C=ny.zeros((1, feat))
+        for a in range(0, feat):
+            C[0, a]=x_train[i, a]
+        hyp_x = hyp(theta_t, C, i)
+        cost_a[i,0]=(1/m)*cost(hyp_x, y_train[i])
+        for j in range(0, feat):
+          cost_b[i, j]=(deri(hyp_x, y_train[i]))*x_train[i, j]
+
+    for i in range(0, feat):
+       dcost[i, 0]=(alpha/m)*(sum(cost_b)[i])
+
+    plt.scatter(a, sum(cost_a))
+    q=q+1
+
+plt.show()
+
+predict=ny.zeros((m, 1))
+
+for i in range(0, m):
+    D=ny.zeros((1, feat))
+    for a in range(0, feat):
+        D[0, a] = x_train[i, a]
+    hypo = hyp(theta_t, D, i)
+    if(hypo>0.5):
+        predict[i]=1
+    else:
+        predict[i] = 0
+
+acc=0
+
+for i in range(0, m):
+    if(predict[i]==y_train[i]):
+	    acc=acc+1
+print(acc/m)
+
+n=x_test.shape[0]
+acc_test=0
+predict1=ny.zeros((n, 1))
+
+for i in range(0, n):
+    E=ny.zeros((1, feat))
+    for a in range(0, feat):
+        E[0, a] = x_test[i, a]
+    hypo1=hyp(theta_t, E, i)
+    if(hypo1>0.5):
+        predict1[i]=1
+    else:
+        predict1[i] = 0
+
+for i in range(0, n):
+    if(predict1[i]==y_test[i]):
+        acc_test=acc_test+1
+print(acc_test/n)
