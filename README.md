@@ -1,2 +1,2 @@
 # MachineLearning
-Implemented Linear Regression in Python
+Implemented Various Regression Techniques in Python
